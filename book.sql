@@ -394,6 +394,13 @@ SELECT b.book_seq
 WITH READ ONLY
 ;
 
+--==================================================================
+-- 관리자 로그인 쿼리 : 아이디 비번 일치 여부 판단
+SELECT m.manager_seq
+  FROM MANAGER m
+ WHERE m.manager_id = 'admin'
+   AND m.password = 'admin'
+;
 
 
 
