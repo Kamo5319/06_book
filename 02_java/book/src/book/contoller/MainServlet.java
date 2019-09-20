@@ -10,11 +10,15 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import book.dao.BookDaoIf;
 import book.dao.BookDaoImpl;
+import book.dao.ManagerDaoIf;
+import book.dao.ManagerDaoImpl;
 import book.exception.NotFoundException;
 import book.vo.Book;
+import book.vo.Manager;
 
 /**
  * 모든 요청을 받아들이는 컨트롤러 서블릿 클래스
@@ -45,10 +49,258 @@ public class MainServlet extends HttpServlet {
 			datail(request, response);
 		} else if ("update".equals(action)) {
 			update(request, response);
+		} else if ("delete".equals(action)) {
+			delete(request, response);
+		} else if ("insert".equals(action)) {
+			insert(request, response);
+		} else if ("login".equals(action)) {
+			login(request, response);
+		} else if ("logout".equals(action)) {
+			logout(request, response);
 		}
 		
 	}
 	
+	/**
+	 * 세션 해제 처리하여 로그 아웃 시키는 메소드
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 */
+	private void logout(HttpServletRequest request
+					  , HttpServletResponse response) throws IOException {
+		// 로그아웃 처리를 위해서는
+		// 1. 현재 이 요청에 연결된 세션 객체 얻기 false 로 얻어냄
+		HttpSession session = request.getSession(false);
+		
+		// 세션에 붙어 있던 아이디 추출
+		String userId = (String) session.getAttribute("userId");
+		
+		// 2. 얻어진 세션 객체가 null 이 아니면
+		if (session != null && userId != null) {
+			// 로그인 중으로 판단하고 해제함
+			// 3. 세션 invalidate()	처리
+			session.invalidate();
+		}
+		
+		// 4. 초기 화면으로 이동
+		response.sendRedirect("/index");		
+	}
+
+	/**
+	 * 로그인 처리하는 메소드
+	 * GET 요청 : 로그인 할 수 있는 페이지를 보여줌
+	 * POST 요청 : DB 테이블의 회원(관리자) 아이디/비번 일치시 로그인 세션 처리
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void login(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// 요청된 HTTP 메소드 추출
+		String method = request.getMethod();
+		
+		if ("GET".equals(method)) {
+			// 1. 로그인을 하기 위한 화면 제공
+			String mainContent = "/loginJsp";
+			request.setAttribute("content", mainContent);
+			
+			// /index 화면 뷰 이동
+			String view = "/index";
+			request.getRequestDispatcher(view).forward(request, response);
+			
+		} else if ("POST".equals(method)) {
+			// 2. 로그인 처리
+			// login.jsp 에서 넘어온 form 파라미터 추출
+			String userId = request.getParameter("userId");
+			String password = request.getParameter("password");
+			
+			// ManagerDao 객체 얻기
+			Manager manager = new Manager();
+			manager.setManagerId(userId);
+			manager.setPassword(password);
+			
+			// ManagerDao 객체 얻기
+			ManagerDaoIf dao = new ManagerDaoImpl();
+			
+			// dao 객체 로그인 메소드 호출
+			if (dao.login(manager)) {
+				// 로그인 성공 : 세션 처리 => 기본 화면으로 이동
+				HttpSession session = request.getSession(true);
+				// login 시에는 HTTP 세션을 얻어올 때 true 로 얻어내야 함
+				
+				// 세션에 매니저 아이디를 속성으로 추가 : userId 라는 이름으로
+				session.setAttribute("userId", userId);
+				
+				// 화면에 ~~님, 로그인 하였습니다 메시지 출력 후 이동
+				String message = String.format("%s님, 로그인 하였습니다", userId);
+				request.setAttribute("message", message);
+				
+				// 2초 후 이동할 nextPage 설정
+				String nextPage = "/index";
+				request.setAttribute("nextPage", nextPage);
+				
+			} else {
+				// 로그인 실패 : 메시지 처리 => 로그인 화면으로 다시 이동
+				String message = "로그인이 실패하였습니다.";
+				request.setAttribute("message", message);
+				
+				// 다시 로그인 시도하도록 로그인 화면으로 nextPage 설정
+				String nextPage = "main?action=login";
+				request.setAttribute("nextPage", nextPage);
+			}		
+			
+			// 메인 컨텐트 영역에 보여줄 페이지 설정
+			String mainContent = "/messageLogin";
+			request.setAttribute("content", mainContent);
+			
+			// 메인 화면 뷰 이동
+			String view = "/index";
+			request.getRequestDispatcher(view).forward(request, response);
+			
+		}
+	}
+
+	/**
+	 * 도서 정보 1건을 신규 입력하는 메소드
+	 * GET 요청 : 신규 입력할 수 있는 화면 제공
+	 * POST 요청 : 서버로 전달된 form 파라미터를 사용하여 
+	 * 			   DB 에 insert 쿼리 수행
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void insert(HttpServletRequest request
+					  , HttpServletResponse response) throws ServletException, IOException {
+		// 1. 요청된 HTTP 메소드 추출
+		String method = request.getMethod();
+		
+
+		if ("GET".equals(method)) {
+			// 2. GET 요청 처리 : 신규 입력 화면 제공
+			// mainContent 화면 결정
+			String mainContent = "/insertBook";
+			request.setAttribute("content", mainContent);
+			
+			// /index 로 이동
+			String view = "/index";
+			request.getRequestDispatcher(view).forward(request, response);
+			
+		} else if ("POST".equals(method)) {
+			// 3. POST 요청 처리 : 신규 입력 저장 처리
+			// (1) insert.jsp 에서 넘어오는 form 파라미터 추출
+//			int bookSeq = Integer.valueOf(request.getParameter("bookSeq"));
+			String isbn = request.getParameter("isbn");
+			String title = request.getParameter("title");
+			String author = request.getParameter("author");
+			String content = request.getParameter("content");
+			int companyCd = Integer.valueOf(request.getParameter("companyCd"));
+			int totalPage = Integer.valueOf(request.getParameter("totalPage"));
+			int price = Integer.valueOf(request.getParameter("price"));;
+			int quantity = Integer.valueOf(request.getParameter("quantity"));
+			String regId = "1";
+			
+			// (2) 요청 파라미터 맵 객체에 추가 + 로그인 된 아이디 추가
+			Map<String, Object> bookMap = new HashMap<>();
+//			bookMap.put("bookSeq", bookSeq);
+			bookMap.put("isbn", isbn);
+			bookMap.put("title", title);
+			bookMap.put("author", author);
+			bookMap.put("content", content);
+			bookMap.put("companyCd", companyCd);
+			bookMap.put("totalPage", totalPage);
+			bookMap.put("price", price);
+			bookMap.put("quantity", quantity);
+			bookMap.put("regId", regId);
+						
+			// (3) dao 객체 얻기
+			BookDaoIf dao = new BookDaoImpl();
+			
+			// (4) dao 로  insert 쿼리 수행
+			try {
+				dao.insert(bookMap);
+				
+				// (5) 입력 성공, 실패 수행 결과 처리하여 화면 이동
+				// (5-1) 입력 성공에 대한 화면 이동
+				
+				// 입력 성공 메시지 생성
+				String message = String.format("도서 정보 1건 [%s] 추가 성공", title);
+				request.setAttribute("message", message);
+			
+			} catch (Exception e) {
+				e.printStackTrace();
+				// (5-2) 입력 실패 수행 결과 처리하여 화면 이동
+				String message = e.getMessage();
+				request.setAttribute("message", message);
+			}
+				
+				// 입력 성공 메시지 처리 후 이동할 nextPage 속성 설정
+				String nextPage = "main?action=select";
+				request.setAttribute("nextPage", nextPage);
+				
+				// 메인 컨텐트 영역에 표시할 content 속성 설정
+				String mainContent = "/messageBook";
+				request.setAttribute("content", mainContent);
+				
+				// 이동할 뷰 화면 설정
+				String view = "/index";
+				request.getRequestDispatcher(view).forward(request, response);
+			
+		}		
+		
+	}
+
+	/**
+	 * 도서 정보 1건 삭제 메소드
+	 * @param request
+	 * @param response
+	 * @throws IOException 
+	 * @throws ServletException 
+	 */
+	private void delete(HttpServletRequest request
+				      , HttpServletResponse response) throws ServletException, IOException {
+		// 1. 삭제할 도서 bookSeq 파라미터 추출
+		int bookSeq = Integer.valueOf(request.getParameter("bookSeq"));
+		
+		// 2. dao 객체 얻기
+		BookDaoIf dao = new BookDaoImpl();
+		
+		// 3. dao 로 delete 쿼리 수행
+		try {
+			Book book = new Book();
+			book.setBookSeq(bookSeq);
+			
+			// 3. dao 로 delete 쿼리 수행
+			dao.delete(book);
+			
+			// 4. 삭제 성공에 따른 화면 이동
+			// (1) 삭제 성공 화면 이동
+			// 삭제 성공 메시지 생성
+			String message = String.format("도서 정보[일련번호:%s] 삭제 성공", book.getBookSeq());
+			request.setAttribute("message", message);
+			
+		} catch (NotFoundException e) {
+			// (2) 삭제 실패 화면 이동
+			String message = e.getMessage();
+			request.setAttribute("message", message);
+		}
+		
+		// 삭제 성공 메시지를 2초간 보여준후 이동할 nextPage 설정
+		// 삭제 후에는 보여줄 상세페이지가 없으므로 목록으로 이동
+		String nextPage = "/main?action=select";
+		request.setAttribute("nextPage", nextPage);
+		
+		// 메인 컨텐트 화면에 강라끼울 content 속성 설정
+		String mainContent = "/messageBook";
+		request.setAttribute("content", mainContent);
+		
+		// /index 로 화면 이동
+		String view = "/index";
+		request.getRequestDispatcher(view).forward(request, response);
+		
+	}
+
 	/**
 	 * 도서 정보 1건을 수정하는 메소드
 	 * GET 으로 들어올 시 수정을 위한 화면 제공

@@ -24,6 +24,7 @@
 		<th>도서 제목</th>
 		<th>저자</th>
 		<th>가격</th>
+		<th>&nbsp;</th>
 	</tr>
 	<c:if test="${empty books}">
 		<tr>
@@ -34,13 +35,14 @@
 		<tr>
 			<td>${book.bookSeq}</td>
 			<td><a href="${contextPath}/main?action=detail&bookSeq=${book.bookSeq}"> 
-				${book.title}
+					${book.title}
 				</a>
 			</td>
 			<td>${book.author}</td>
 			<td>
 				<fmt:formatNumber value="${book.price}" type="number" />
 			</td>
+			<td><a href="${contextPath}/main?action=delete&bookSeq=${book.bookSeq}">삭제</a></td>
 		</tr>
 	</c:forEach>
 </table>
