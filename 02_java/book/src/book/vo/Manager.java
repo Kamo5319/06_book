@@ -1,6 +1,6 @@
 package book.vo;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;;
 
 /**
  * MANAGER 테이블과 동일하게 작성된 vo 클래스
@@ -9,7 +9,7 @@ import java.math.BigInteger;
  */
 public class Manager {
 	
-	private BigInteger managerSeq;
+	private int managerSeq;
 	private String managerId;
 	private String name;
 	private String password;
@@ -22,10 +22,10 @@ public class Manager {
 		super();
 	}
 	
-	public BigInteger getManagerSeq() {
+	public int getManagerSeq() {
 		return managerSeq;
 	}
-	public void setManagerSeq(BigInteger managerSeq) {
+	public void setManagerSeq(int managerSeq) {
 		this.managerSeq = managerSeq;
 	}
 	public String getManagerId() {
@@ -75,7 +75,7 @@ public class Manager {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((managerSeq == null) ? 0 : managerSeq.hashCode());
+		result = prime * result + managerSeq;
 		return result;
 	}
 
@@ -88,14 +88,11 @@ public class Manager {
 		if (getClass() != obj.getClass())
 			return false;
 		Manager other = (Manager) obj;
-		if (managerSeq == null) {
-			if (other.managerSeq != null)
-				return false;
-		} else if (!managerSeq.equals(other.managerSeq))
+		if (managerSeq != other.managerSeq)
 			return false;
 		return true;
 	}
-
+	
 	@Override
 	public String toString() {
 		return "관리자 [managerSeq=" + managerSeq + ", managerId=" + managerId + ", name=" + name + ", password="

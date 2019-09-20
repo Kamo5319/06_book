@@ -1,6 +1,6 @@
 package book.vo;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
 /**
  * CODE 테이블의 컬럼과 동일한 vo
@@ -9,13 +9,13 @@ import java.math.BigInteger;
  */
 public class Code {
 	
-	private BigInteger code;
-	private BigInteger pCode;
+	private int code;
+	private int pCode;
 	private String codeNm;
 	private String codeVal;
 	private String useYn;
 	private String codeDesc;
-	private BigInteger sortOrder;
+	private int sortOrder;
 	private String regId;
 	private String regDate;
 	private String modId;
@@ -25,16 +25,16 @@ public class Code {
 		super();
 	}
 	
-	public BigInteger getCode() {
+	public int getCode() {
 		return code;
 	}
-	public void setCode(BigInteger code) {
+	public void setCode(int code) {
 		this.code = code;
 	}
-	public BigInteger getpCode() {
+	public int getpCode() {
 		return pCode;
 	}
-	public void setpCode(BigInteger pCode) {
+	public void setpCode(int pCode) {
 		this.pCode = pCode;
 	}
 	public String getCodeNm() {
@@ -61,10 +61,10 @@ public class Code {
 	public void setCodeDesc(String codeDesc) {
 		this.codeDesc = codeDesc;
 	}
-	public BigInteger getSortOrder() {
+	public int getSortOrder() {
 		return sortOrder;
 	}
-	public void setSortOrder(BigInteger sortOrder) {
+	public void setSortOrder(int sortOrder) {
 		this.sortOrder = sortOrder;
 	}
 	public String getRegId() {
@@ -96,9 +96,10 @@ public class Code {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((code == null) ? 0 : code.hashCode());
+		result = prime * result + code;
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -108,14 +109,11 @@ public class Code {
 		if (getClass() != obj.getClass())
 			return false;
 		Code other = (Code) obj;
-		if (code == null) {
-			if (other.code != null)
-				return false;
-		} else if (!code.equals(other.code))
+		if (code != other.code)
 			return false;
 		return true;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "번호 [code=" + code + ", pCode=" + pCode + ", codeNm=" + codeNm + ", codeVal=" + codeVal + ", useYn="
